@@ -1,0 +1,1273 @@
+
+cat > /mnt/user-data/outputs/sistem_beasiswa_naivebayes.html << 'HTMLEOF'
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SiBEASIS — Sistem Beasiswa Naive Bayes</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root {
+  --navy: #0D1B2A;
+  --navy2: #1B2D42;
+  --navy3: #243447;
+  --teal: #00B4A2;
+  --teal2: #00D4BE;
+  --teal-dim: rgba(0,180,162,0.12);
+  --teal-dim2: rgba(0,180,162,0.06);
+  --gold: #F5A623;
+  --gold-dim: rgba(245,166,35,0.12);
+  --green: #2ECC71;
+  --green-dim: rgba(46,204,113,0.12);
+  --red: #E74C3C;
+  --red-dim: rgba(231,76,60,0.12);
+  --text: #E8EDF2;
+  --text2: #8A9BB0;
+  --text3: #4A5568;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --card: #162030;
+  --card2: #1A2840;
+  --r: 10px;
+  --r2: 14px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: var(--navy);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+  overflow: hidden;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--navy3); border-radius: 3px; }
+
+/* ── LAYOUT ── */
+.app { display: flex; height: 100vh; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 230px; flex-shrink: 0;
+  background: var(--navy2);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.sidebar-header {
+  padding: 20px 18px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.logo-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--teal-dim); border: 1px solid rgba(0,180,162,0.25);
+  border-radius: 8px; padding: 6px 10px; margin-bottom: 10px;
+}
+.logo-badge i { color: var(--teal); font-size: 18px; }
+.logo-badge span { font-size: 13px; font-weight: 700; color: var(--teal); letter-spacing: 0.5px; }
+.sidebar-header h1 { font-size: 11px; color: var(--text2); line-height: 1.5; }
+.sidebar-header h1 strong { color: var(--text); font-weight: 600; display: block; font-size: 12px; }
+
+.nav-group { padding: 12px 0; }
+.nav-label {
+  padding: 4px 18px 6px;
+  font-size: 10px; font-weight: 700;
+  color: var(--text3); text-transform: uppercase; letter-spacing: 1px;
+}
+.nav-btn {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 18px; width: 100%; border: none; background: none;
+  color: var(--text2); font-size: 13px; font-family: inherit;
+  cursor: pointer; text-align: left;
+  border-left: 2px solid transparent;
+  transition: all 0.15s;
+  position: relative;
+}
+.nav-btn:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+.nav-btn.active {
+  background: var(--teal-dim); color: var(--teal);
+  border-left-color: var(--teal); font-weight: 600;
+}
+.nav-btn i { font-size: 17px; }
+.nav-btn .badge-count {
+  margin-left: auto;
+  background: var(--teal); color: var(--navy);
+  font-size: 10px; font-weight: 700;
+  padding: 1px 6px; border-radius: 10px;
+}
+
+.sidebar-footer {
+  margin-top: auto; padding: 14px 18px;
+  border-top: 1px solid var(--border);
+  font-size: 11px; color: var(--text3);
+  font-family: 'JetBrains Mono', monospace;
+}
+.sidebar-footer span { display: block; color: var(--teal); font-weight: 500; margin-bottom: 2px; }
+
+/* ── MAIN ── */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+
+.topbar {
+  background: var(--navy2); border-bottom: 1px solid var(--border);
+  padding: 14px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+}
+.topbar-left h2 { font-size: 16px; font-weight: 700; }
+.topbar-left p { font-size: 12px; color: var(--text2); margin-top: 1px; }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+
+.content { flex: 1; overflow-y: auto; padding: 24px; }
+.page { display: none; animation: fadeIn 0.2s ease; }
+.page.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── COMPONENTS ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 8px 16px; border-radius: var(--r); border: 1px solid var(--border2);
+  background: rgba(255,255,255,0.05); color: var(--text);
+  font-size: 13px; font-weight: 500; font-family: inherit;
+  cursor: pointer; transition: all 0.15s;
+}
+.btn:hover { background: rgba(255,255,255,0.09); border-color: rgba(255,255,255,0.18); }
+.btn:active { transform: scale(0.98); }
+.btn-teal { background: var(--teal); color: var(--navy); border-color: var(--teal); font-weight: 700; }
+.btn-teal:hover { background: var(--teal2); border-color: var(--teal2); }
+.btn-gold { background: var(--gold-dim); color: var(--gold); border-color: rgba(245,166,35,0.3); }
+.btn-gold:hover { background: rgba(245,166,35,0.2); }
+.btn-danger { background: var(--red-dim); color: var(--red); border-color: rgba(231,76,60,0.3); }
+.btn-sm { padding: 5px 11px; font-size: 12px; }
+.btn i { font-size: 16px; }
+
+/* Cards */
+.card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r2); padding: 18px 20px; margin-bottom: 18px;
+}
+.card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.card-title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 700; color: var(--text);
+}
+.card-title i { font-size: 17px; color: var(--teal); }
+
+/* Metric grid */
+.metrics { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 20px; }
+.metric-card {
+  background: var(--card2); border: 1px solid var(--border);
+  border-radius: var(--r2); padding: 16px 18px;
+  position: relative; overflow: hidden;
+}
+.metric-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0;
+  height: 2px;
+}
+.metric-card.mc-teal::before { background: var(--teal); }
+.metric-card.mc-gold::before { background: var(--gold); }
+.metric-card.mc-green::before { background: var(--green); }
+.metric-card.mc-red::before { background: var(--red); }
+.metric-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-bottom: 6px; }
+.metric-value { font-size: 28px; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
+.metric-card.mc-teal .metric-value { color: var(--teal); }
+.metric-card.mc-gold .metric-value { color: var(--gold); }
+.metric-card.mc-green .metric-value { color: var(--green); }
+.metric-card.mc-red .metric-value { color: var(--red); }
+.metric-sub { font-size: 11px; color: var(--text3); margin-top: 3px; }
+
+/* Grid */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+/* Form */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group label { font-size: 11px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; }
+.form-group input, .form-group select {
+  padding: 9px 12px; border-radius: var(--r);
+  background: var(--navy3); border: 1px solid var(--border2);
+  color: var(--text); font-size: 13px; font-family: inherit;
+  outline: none; transition: border-color 0.15s;
+}
+.form-group input:focus, .form-group select:focus {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(0,180,162,0.15);
+}
+.form-group select option { background: var(--navy2); }
+
+/* Table */
+.tbl-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+thead th {
+  padding: 9px 12px; text-align: left;
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+  color: var(--text3); border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+tbody td { padding: 9px 12px; border-bottom: 1px solid rgba(255,255,255,0.04); color: var(--text2); }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: rgba(255,255,255,0.03); color: var(--text); }
+tfoot td { padding: 9px 12px; border-top: 1px solid var(--border); font-size: 12px; }
+
+/* Badges */
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 2px 10px; border-radius: 20px;
+  font-size: 11px; font-weight: 700;
+}
+.b-green { background: var(--green-dim); color: var(--green); }
+.b-red { background: var(--red-dim); color: var(--red); }
+.b-teal { background: var(--teal-dim); color: var(--teal); }
+.b-gold { background: var(--gold-dim); color: var(--gold); }
+
+/* Result box */
+.result-hero {
+  border-radius: var(--r2); padding: 22px 24px;
+  border: 1px solid; margin-bottom: 16px;
+  display: flex; align-items: center; gap: 18px;
+}
+.result-hero.layak { background: var(--green-dim); border-color: rgba(46,204,113,0.3); }
+.result-hero.tidak { background: var(--red-dim); border-color: rgba(231,76,60,0.3); }
+.result-icon { font-size: 40px; flex-shrink: 0; }
+.result-hero.layak .result-icon { color: var(--green); }
+.result-hero.tidak .result-icon { color: var(--red); }
+.result-verdict { font-size: 20px; font-weight: 800; }
+.result-hero.layak .result-verdict { color: var(--green); }
+.result-hero.tidak .result-verdict { color: var(--red); }
+.result-desc { font-size: 12px; color: var(--text2); margin-top: 3px; }
+
+/* Probability bars */
+.prob-row { margin-bottom: 10px; }
+.prob-header { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 12px; }
+.prob-header span:first-child { color: var(--text2); }
+.prob-header span:last-child { font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+.prob-track { height: 8px; background: rgba(255,255,255,0.07); border-radius: 4px; overflow: hidden; }
+.prob-fill { height: 100%; border-radius: 4px; transition: width 0.8s cubic-bezier(0.4,0,0.2,1); }
+.prob-fill.pf-green { background: var(--green); }
+.prob-fill.pf-red { background: var(--red); }
+
+/* Steps */
+.steps { display: flex; align-items: center; gap: 6px; margin-bottom: 18px; }
+.step { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text3); }
+.step.done { color: var(--teal); }
+.step.active { color: var(--text); font-weight: 600; }
+.step-n {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--navy3); border: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; flex-shrink: 0;
+}
+.step.done .step-n { background: var(--teal); color: var(--navy); border-color: var(--teal); }
+.step.active .step-n { border-color: var(--text); color: var(--text); }
+.step-line { flex: 1; height: 1px; background: var(--border); max-width: 24px; }
+
+/* Info row */
+.info-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 0; border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.info-row:last-child { border-bottom: none; }
+.info-row .il { color: var(--text2); }
+.info-row .iv { font-weight: 600; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+
+/* Section header */
+.section-title {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--text3); margin-bottom: 12px;
+  padding-bottom: 8px; border-bottom: 1px solid var(--border);
+}
+
+/* Feature pill */
+.fp {
+  display: inline-block; padding: 3px 9px;
+  background: var(--teal-dim); color: var(--teal);
+  border-radius: 6px; font-size: 11px; font-weight: 600;
+  border: 1px solid rgba(0,180,162,0.2);
+  margin: 2px;
+}
+
+/* Code block */
+.code-block {
+  background: var(--navy); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 12px 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; color: var(--teal); line-height: 1.8;
+  margin: 10px 0;
+}
+
+/* Alert */
+.alert {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 11px 14px; border-radius: var(--r);
+  font-size: 12px; margin-bottom: 14px;
+  border: 1px solid;
+}
+.alert-info { background: var(--teal-dim2); border-color: rgba(0,180,162,0.2); color: var(--text2); }
+.alert-warn { background: var(--gold-dim); border-color: rgba(245,166,35,0.25); color: #C8883A; }
+.alert i { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.alert-info i { color: var(--teal); }
+.alert-warn i { color: var(--gold); }
+
+/* Empty state */
+.empty-state { text-align: center; padding: 48px 20px; }
+.empty-state i { font-size: 44px; color: var(--text3); display: block; margin-bottom: 12px; }
+.empty-state h3 { font-size: 14px; font-weight: 600; color: var(--text2); margin-bottom: 4px; }
+.empty-state p { font-size: 12px; color: var(--text3); }
+
+/* Divider */
+.divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+/* Konfirmasi modal */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+}
+.modal-overlay.show { opacity: 1; pointer-events: all; }
+.modal {
+  background: var(--card2); border: 1px solid var(--border2);
+  border-radius: var(--r2); padding: 24px 28px; width: 380px;
+  transform: scale(0.95); transition: transform 0.2s;
+}
+.modal-overlay.show .modal { transform: scale(1); }
+.modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+.modal p { font-size: 13px; color: var(--text2); margin-bottom: 20px; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--card2); border: 1px solid var(--border2);
+  border-radius: var(--r); padding: 12px 16px;
+  font-size: 13px; font-weight: 500;
+  display: flex; align-items: center; gap: 9px;
+  z-index: 2000; transform: translateY(80px);
+  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  min-width: 220px;
+}
+.toast.show { transform: translateY(0); }
+.toast.t-success { border-color: rgba(46,204,113,0.4); }
+.toast.t-success i { color: var(--green); }
+.toast.t-error { border-color: rgba(231,76,60,0.4); }
+.toast.t-error i { color: var(--red); }
+
+/* Tab system */
+.tabs { display: flex; gap: 2px; margin-bottom: 16px; background: var(--navy3); padding: 3px; border-radius: var(--r); }
+.tab-btn {
+  flex: 1; padding: 7px; border: none; background: none;
+  color: var(--text2); font-size: 12px; font-weight: 600;
+  font-family: inherit; cursor: pointer; border-radius: 7px;
+  transition: all 0.15s;
+}
+.tab-btn.active { background: var(--card); color: var(--text); }
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+
+/* Highlight row */
+.row-highlight { background: var(--teal-dim2) !important; }
+.row-highlight td { color: var(--text) !important; }
+
+/* Confusion matrix */
+.cm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.cm-cell {
+  padding: 16px; border-radius: var(--r); text-align: center;
+  border: 1px solid var(--border);
+}
+.cm-cell .cm-val { font-size: 32px; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
+.cm-cell .cm-lbl { font-size: 11px; color: var(--text2); margin-top: 4px; }
+.cm-tp { background: var(--green-dim); }
+.cm-tp .cm-val { color: var(--green); }
+.cm-tn { background: rgba(0,180,162,0.08); }
+.cm-tn .cm-val { color: var(--teal); }
+.cm-fp { background: var(--gold-dim); }
+.cm-fp .cm-val { color: var(--gold); }
+.cm-fn { background: var(--red-dim); }
+.cm-fn .cm-val { color: var(--red); }
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <i class="ti ti-check"></i> <span id="toast-msg">Berhasil!</span>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h3 id="modal-title">Konfirmasi</h3>
+    <p id="modal-msg">Yakin?</p>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Batal</button>
+      <button class="btn btn-danger" id="modal-confirm">Ya, Hapus</button>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+<!-- ══ SIDEBAR ══ -->
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div class="logo-badge">
+      <i class="ti ti-school"></i>
+      <span>SiBEASIS</span>
+    </div>
+    <h1><strong>Sistem Kelayakan Beasiswa</strong>Naive Bayes Classifier</h1>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Menu</div>
+    <button class="nav-btn active" onclick="gotoPage('dashboard')"><i class="ti ti-layout-dashboard"></i> Dashboard</button>
+    <button class="nav-btn" onclick="gotoPage('klasifikasi')"><i class="ti ti-search"></i> Klasifikasi</button>
+    <button class="nav-btn" onclick="gotoPage('training')"><i class="ti ti-database"></i> Data Training <span class="badge-count" id="nb-training">20</span></button>
+    <button class="nav-btn" onclick="gotoPage('riwayat')"><i class="ti ti-history"></i> Riwayat Uji <span class="badge-count" id="nb-riwayat" style="display:none;"></span></button>
+    <button class="nav-btn" onclick="gotoPage('evaluasi')"><i class="ti ti-chart-bar"></i> Evaluasi</button>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Info</div>
+    <button class="nav-btn" onclick="gotoPage('algoritma')"><i class="ti ti-math-function"></i> Algoritma</button>
+    <button class="nav-btn" onclick="gotoPage('panduan')"><i class="ti ti-book"></i> Panduan Dev</button>
+  </div>
+  <div class="sidebar-footer">
+    <span>v1.0.0 — Blackbox Ready</span>
+    Categorical Naive Bayes<br>Laplace Smoothing α=1
+  </div>
+</div>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+<div class="topbar">
+  <div class="topbar-left">
+    <h2 id="page-title">Dashboard</h2>
+    <p id="page-sub">Ringkasan sistem dan statistik data training</p>
+  </div>
+  <div class="topbar-right">
+    <button class="btn btn-teal btn-sm" onclick="gotoPage('klasifikasi')">
+      <i class="ti ti-plus"></i> Klasifikasi Baru
+    </button>
+  </div>
+</div>
+<div class="content">
+
+<!-- ═══════════ DASHBOARD ═══════════ -->
+<div class="page active" id="page-dashboard">
+  <div class="metrics">
+    <div class="metric-card mc-teal">
+      <div class="metric-label">Total Training</div>
+      <div class="metric-value" id="m-total">0</div>
+      <div class="metric-sub">rekaman data latih</div>
+    </div>
+    <div class="metric-card mc-green">
+      <div class="metric-label">Kelas Layak</div>
+      <div class="metric-value" id="m-layak">0</div>
+      <div class="metric-sub" id="m-layak-pct">— dari training</div>
+    </div>
+    <div class="metric-card mc-red">
+      <div class="metric-label">Kelas Tidak</div>
+      <div class="metric-value" id="m-tidak">0</div>
+      <div class="metric-sub" id="m-tidak-pct">— dari training</div>
+    </div>
+    <div class="metric-card mc-gold">
+      <div class="metric-label">Total Diuji</div>
+      <div class="metric-value" id="m-diuji">0</div>
+      <div class="metric-sub">data sudah diklasifikasi</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i class="ti ti-chart-donut-3"></i> Distribusi Kelas</div>
+      </div>
+      <div style="position:relative;height:190px;">
+        <canvas id="chartDonut" role="img" aria-label="Donut chart distribusi kelas data training"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i class="ti ti-variable"></i> Prior Probability</div>
+      </div>
+      <div class="info-row"><span class="il">P(Layak)</span><span class="iv" id="prior-l">—</span></div>
+      <div class="info-row"><span class="il">P(Tidak Layak)</span><span class="iv" id="prior-t">—</span></div>
+      <div class="info-row"><span class="il">Total Fitur</span><span class="iv">5 Kriteria</span></div>
+      <div class="info-row"><span class="il">Smoothing</span><span class="iv">Laplace α=1</span></div>
+      <div class="info-row"><span class="il">Tipe Model</span><span class="iv">Categorical NB</span></div>
+      <div class="divider"></div>
+      <button class="btn btn-teal" style="width:100%;" onclick="gotoPage('klasifikasi')">
+        <i class="ti ti-arrow-right"></i> Mulai Klasifikasi
+      </button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><i class="ti ti-chart-bar"></i> Distribusi Fitur per Kelas</div>
+    </div>
+    <div style="position:relative;height:220px;">
+      <canvas id="chartBar" role="img" aria-label="Bar chart distribusi fitur penghasilan per kelas"></canvas>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><i class="ti ti-list-check"></i> Kriteria Penilaian</div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Kriteria</th><th>Nilai</th><th>Pengaruh</th><th>Keterangan</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Penghasilan OT</td><td><span class="fp">Rendah</span><span class="fp">Sedang</span><span class="fp">Tinggi</span></td><td><span class="badge b-red">Tinggi</span></td><td>Pendapatan per bulan keluarga</td></tr>
+          <tr><td>2</td><td>IPK / Akademik</td><td><span class="fp">Rendah</span><span class="fp">Sedang</span><span class="fp">Tinggi</span></td><td><span class="badge b-red">Tinggi</span></td><td>Skala 0–4 atau 0–100</td></tr>
+          <tr><td>3</td><td>Tanggungan Keluarga</td><td><span class="fp">Sedikit</span><span class="fp">Banyak</span></td><td><span class="badge b-gold">Sedang</span></td><td>Jumlah anggota yang ditanggung</td></tr>
+          <tr><td>4</td><td>Status Tinggal</td><td><span class="fp">Kontrak</span><span class="fp">Milik Sendiri</span></td><td><span class="badge b-gold">Sedang</span></td><td>Kepemilikan tempat tinggal</td></tr>
+          <tr><td>5</td><td>Prestasi / Organisasi</td><td><span class="fp">Ada</span><span class="fp">Tidak Ada</span></td><td><span class="badge b-teal">Normal</span></td><td>Kegiatan non-akademik</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ KLASIFIKASI ═══════════ -->
+<div class="page" id="page-klasifikasi">
+  <div class="steps">
+    <div class="step active" id="stp1"><div class="step-n">1</div> Input Data</div>
+    <div class="step-line"></div>
+    <div class="step" id="stp2"><div class="step-n">2</div> Proses NB</div>
+    <div class="step-line"></div>
+    <div class="step" id="stp3"><div class="step-n">3</div> Hasil</div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><i class="ti ti-user-plus"></i> Data Calon Penerima Beasiswa</div>
+    </div>
+    <div class="alert alert-info">
+      <i class="ti ti-info-circle"></i>
+      <span>Isi semua kolom dengan data yang akurat. Sistem akan menghitung probabilitas kelayakan menggunakan algoritma Naive Bayes dengan Laplace Smoothing.</span>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Nama Lengkap</label>
+        <input type="text" id="f-nama" placeholder="Contoh: Ahmad Fauzi Ramadhan" />
+      </div>
+      <div class="form-group">
+        <label>NIM / Nomor Identitas</label>
+        <input type="text" id="f-nim" placeholder="Contoh: 20210001" />
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Penghasilan Orang Tua / Bulan</label>
+        <select id="f-penghasilan">
+          <option value="Rendah">Rendah — Di bawah Rp 2.000.000</option>
+          <option value="Sedang">Sedang — Rp 2.000.000 s/d Rp 5.000.000</option>
+          <option value="Tinggi">Tinggi — Di atas Rp 5.000.000</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>IPK / Nilai Akademik</label>
+        <select id="f-ipk">
+          <option value="Tinggi">Tinggi — IPK ≥ 3,50 / Nilai ≥ 85</option>
+          <option value="Sedang">Sedang — IPK 3,00–3,49 / Nilai 70–84</option>
+          <option value="Rendah">Rendah — IPK &lt; 3,00 / Nilai &lt; 70</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Jumlah Tanggungan Keluarga</label>
+        <select id="f-tanggungan">
+          <option value="Banyak">Banyak — 4 orang atau lebih</option>
+          <option value="Sedikit">Sedikit — Kurang dari 4 orang</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Status Tempat Tinggal</label>
+        <select id="f-tinggal">
+          <option value="Kontrak">Kontrak / Kos / Sewa</option>
+          <option value="Milik Sendiri">Milik Sendiri / Milik Keluarga</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Prestasi / Aktif Organisasi</label>
+        <select id="f-prestasi">
+          <option value="Ada">Ada — Punya prestasi atau aktif organisasi</option>
+          <option value="Tidak Ada">Tidak Ada</option>
+        </select>
+      </div>
+      <div class="form-group"></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:6px;">
+      <button class="btn btn-teal" onclick="doKlasifikasi()">
+        <i class="ti ti-calculator"></i> Hitung & Klasifikasi
+      </button>
+      <button class="btn" onclick="resetKlasifikasi()">
+        <i class="ti ti-refresh"></i> Reset Form
+      </button>
+    </div>
+  </div>
+  <div id="result-area"></div>
+</div>
+
+<!-- ═══════════ DATA TRAINING ═══════════ -->
+<div class="page" id="page-training">
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><i class="ti ti-database"></i> Dataset Pelatihan Model</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="badge b-teal" id="count-label">0 data</span>
+        <button class="btn btn-sm" onclick="showImportSample()"><i class="ti ti-download"></i> Load Sampel</button>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>#</th><th>Penghasilan</th><th>IPK</th><th>Tanggungan</th><th>Tinggal</th><th>Prestasi</th><th>Kelas</th><th>Aksi</th></tr>
+        </thead>
+        <tbody id="training-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><i class="ti ti-plus"></i> Tambah Data Training</div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Penghasilan</label>
+        <select id="t-p"><option value="Rendah">Rendah</option><option value="Sedang">Sedang</option><option value="Tinggi">Tinggi</option></select>
+      </div>
+      <div class="form-group">
+        <label>IPK</label>
+        <select id="t-i"><option value="Tinggi">Tinggi</option><option value="Sedang">Sedang</option><option value="Rendah">Rendah</option></select>
+      </div>
+      <div class="form-group">
+        <label>Tanggungan</label>
+        <select id="t-t"><option value="Banyak">Banyak</option><option value="Sedikit">Sedikit</option></select>
+      </div>
+      <div class="form-group">
+        <label>Tinggal</label>
+        <select id="t-r"><option value="Kontrak">Kontrak</option><option value="Milik Sendiri">Milik Sendiri</option></select>
+      </div>
+      <div class="form-group">
+        <label>Prestasi</label>
+        <select id="t-pr"><option value="Ada">Ada</option><option value="Tidak Ada">Tidak Ada</option></select>
+      </div>
+      <div class="form-group">
+        <label>Label Kelas</label>
+        <select id="t-k"><option value="Layak">Layak</option><option value="Tidak Layak">Tidak Layak</option></select>
+      </div>
+    </div>
+    <button class="btn btn-teal" onclick="addTraining()">
+      <i class="ti ti-plus"></i> Tambah Data
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════ RIWAYAT ═══════════ -->
+<div class="page" id="page-riwayat">
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><i class="ti ti-history"></i> Riwayat Hasil Klasifikasi</div>
+      <button class="btn btn-danger btn-sm" onclick="confirmClear()" id="btn-clear" style="display:none;">
+        <i class="ti ti-trash"></i> Hapus Semua
+      </button>
+    </div>
+    <div id="riwayat-empty" class="empty-state">
+      <i class="ti ti-inbox"></i>
+      <h3>Belum Ada Data</h3>
+      <p>Belum ada data yang diklasifikasi.<br>Gunakan menu Klasifikasi untuk memulai.</p>
+    </div>
+    <div id="riwayat-table" style="display:none;">
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>#</th><th>Nama</th><th>NIM</th><th>Penghasilan</th><th>IPK</th><th>Tanggungan</th><th>Tinggal</th><th>Prestasi</th><th>Hasil</th><th>P(Layak)</th><th>P(Tidak)</th></tr>
+          </thead>
+          <tbody id="riwayat-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ EVALUASI ═══════════ -->
+<div class="page" id="page-evaluasi">
+  <div id="eval-empty" class="card">
+    <div class="empty-state">
+      <i class="ti ti-chart-bar-off"></i>
+      <h3>Data Evaluasi Belum Tersedia</h3>
+      <p>Lakukan klasifikasi terlebih dahulu untuk melihat evaluasi model.</p>
+    </div>
+  </div>
+  <div id="eval-content" style="display:none;">
+    <div class="metrics">
+      <div class="metric-card mc-teal"><div class="metric-label">Total Uji</div><div class="metric-value" id="ev-total">0</div><div class="metric-sub">data diklasifikasi</div></div>
+      <div class="metric-card mc-green"><div class="metric-label">Prediksi Layak</div><div class="metric-value" id="ev-layak">0</div><div class="metric-sub" id="ev-layak-p">—</div></div>
+      <div class="metric-card mc-red"><div class="metric-label">Prediksi Tidak</div><div class="metric-value" id="ev-tidak">0</div><div class="metric-sub" id="ev-tidak-p">—</div></div>
+      <div class="metric-card mc-gold"><div class="metric-label">Avg P(Layak)</div><div class="metric-value" id="ev-avg">—</div><div class="metric-sub">rata-rata probabilitas</div></div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header"><div class="card-title"><i class="ti ti-chart-pie"></i> Distribusi Hasil</div></div>
+        <div style="position:relative;height:200px;">
+          <canvas id="chartEval" role="img" aria-label="Pie distribusi hasil prediksi"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title"><i class="ti ti-table"></i> Statistik Probabilitas</div></div>
+        <div class="info-row"><span class="il">P(Layak) Tertinggi</span><span class="iv" id="ev-max-l">—</span></div>
+        <div class="info-row"><span class="il">P(Layak) Terendah</span><span class="iv" id="ev-min-l">—</span></div>
+        <div class="info-row"><span class="il">P(Tidak) Tertinggi</span><span class="iv" id="ev-max-t">—</span></div>
+        <div class="info-row"><span class="il">P(Tidak) Terendah</span><span class="iv" id="ev-min-t">—</span></div>
+        <div class="info-row"><span class="il">Margin Keputusan Avg</span><span class="iv" id="ev-margin">—</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ ALGORITMA ═══════════ -->
+<div class="page" id="page-algoritma">
+  <div class="card">
+    <div class="card-header"><div class="card-title"><i class="ti ti-math-function"></i> Teori Algoritma Naive Bayes</div></div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:14px;">
+      <strong style="color:var(--text);">Naive Bayes</strong> adalah algoritma klasifikasi berbasis probabilistik menggunakan Teorema Bayes dengan asumsi independensi kondisional antar fitur.
+    </p>
+    <div class="section-title">Rumus Naive Bayes</div>
+    <div class="code-block">
+P(C | X) ∝ P(C) × ∏ P(xᵢ | C)
+<br>
+Di mana:
+  C = kelas (Layak / Tidak Layak)
+  X = vektor fitur input
+  P(C) = prior probability kelas C
+  P(xᵢ|C) = likelihood fitur xᵢ pada kelas C
+    </div>
+    <div class="section-title" style="margin-top:16px;">Laplace Smoothing</div>
+    <div class="code-block">
+P(xᵢ | C) = (count(xᵢ, C) + α) / (count(C) + α × |Vᵢ|)
+<br>
+  α = 1  (parameter smoothing)
+  |Vᵢ| = jumlah nilai unik untuk fitur ke-i
+  count(xᵢ, C) = frekuensi xᵢ pada kelas C
+    </div>
+    <div class="section-title" style="margin-top:16px;">Normalisasi Posterior</div>
+    <div class="code-block">
+P(C | X) = score(C) / Σ score(C')   untuk semua C'
+<br>
+Sehingga P(Layak|X) + P(Tidak|X) = 1.0 (100%)
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title"><i class="ti ti-steps"></i> Langkah Perhitungan</div></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Langkah</th><th>Proses</th><th>Formula</th><th>Keterangan</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge b-teal">1</span></td><td>Hitung Prior</td><td style="font-family:'JetBrains Mono',monospace;font-size:11px;">(count(C)+1) / (N+|C|)</td><td>Dengan Laplace Smoothing</td></tr>
+          <tr><td><span class="badge b-teal">2</span></td><td>Hitung Likelihood</td><td style="font-family:'JetBrains Mono',monospace;font-size:11px;">(count(xᵢ,C)+1) / (count(C)+|Vᵢ|)</td><td>Per fitur per kelas</td></tr>
+          <tr><td><span class="badge b-teal">3</span></td><td>Hitung Score</td><td style="font-family:'JetBrains Mono',monospace;font-size:11px;">prior × ∏ likelihood</td><td>Perkalian semua nilai</td></tr>
+          <tr><td><span class="badge b-teal">4</span></td><td>Normalisasi</td><td style="font-family:'JetBrains Mono',monospace;font-size:11px;">score(C) / Σ score</td><td>Konversi ke probabilitas</td></tr>
+          <tr><td><span class="badge b-teal">5</span></td><td>Prediksi</td><td style="font-family:'JetBrains Mono',monospace;font-size:11px;">argmax P(C|X)</td><td>Kelas dengan P tertinggi</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ PANDUAN DEV ═══════════ -->
+<div class="page" id="page-panduan">
+  <div class="card">
+    <div class="card-header"><div class="card-title"><i class="ti ti-code"></i> Panduan Pengembangan ke Blackbox</div></div>
+    <div class="alert alert-warn">
+      <i class="ti ti-alert-triangle"></i>
+      <span>Website ini adalah <strong>frontend prototype</strong>. Untuk produksi (blackbox), semua logika NB harus dipindahkan ke backend server.</span>
+    </div>
+    <div class="section-title">Arsitektur Blackbox</div>
+    <div class="code-block">
+Frontend (HTML/CSS/JS)
+  └─ Kirim data via fetch() / axios ke API
+<br>
+Backend API (Python Flask / PHP / Node.js)
+  ├─ POST /api/klasifikasi  → proses NB, return hasil
+  ├─ GET  /api/training     → ambil data training
+  ├─ POST /api/training     → tambah data training
+  └─ DELETE /api/training/:id
+<br>
+Database (MySQL / PostgreSQL / MongoDB)
+  ├─ tabel: training_data   (id, penghasilan, ipk, ...)
+  ├─ tabel: hasil_klasifikasi (id, nama, nim, ...)
+  └─ tabel: users           (id, username, role, ...)
+    </div>
+    <div class="section-title" style="margin-top:16px;">Stack Teknologi Rekomendasi</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Layer</th><th>Pilihan 1</th><th>Pilihan 2</th><th>Pilihan 3</th></tr></thead>
+        <tbody>
+          <tr><td>Frontend</td><td>HTML/CSS/JS (ini)</td><td>React.js</td><td>Vue.js</td></tr>
+          <tr><td>Backend</td><td>Python Flask</td><td>PHP Laravel</td><td>Node.js Express</td></tr>
+          <tr><td>Database</td><td>MySQL</td><td>PostgreSQL</td><td>MongoDB</td></tr>
+          <tr><td>Auth</td><td>Session PHP</td><td>JWT Token</td><td>OAuth 2.0</td></tr>
+          <tr><td>Deploy</td><td>VPS + Nginx</td><td>Heroku</td><td>Railway / Render</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="section-title" style="margin-top:16px;">Fitur Tambahan untuk Blackbox</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Fitur</th><th>Deskripsi</th><th>Prioritas</th></tr></thead>
+        <tbody>
+          <tr><td>Multi-user Auth</td><td>Login admin & mahasiswa pelamar</td><td><span class="badge b-red">Wajib</span></td></tr>
+          <tr><td>CRUD Data Training</td><td>Kelola dataset via UI (sudah ada)</td><td><span class="badge b-red">Wajib</span></td></tr>
+          <tr><td>Export Excel/PDF</td><td>Download hasil klasifikasi</td><td><span class="badge b-gold">Tinggi</span></td></tr>
+          <tr><td>Import CSV</td><td>Upload data training massal</td><td><span class="badge b-gold">Tinggi</span></td></tr>
+          <tr><td>Dashboard Admin</td><td>Statistik lengkap & grafik</td><td><span class="badge b-gold">Tinggi</span></td></tr>
+          <tr><td>Notifikasi Email</td><td>Kirim hasil ke mahasiswa</td><td><span class="badge b-teal">Opsional</span></td></tr>
+          <tr><td>API REST</td><td>Endpoint untuk integrasi sistem lain</td><td><span class="badge b-teal">Opsional</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+</div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+// ═══════════════════════════════════════
+// DATA TRAINING AWAL (20 data sampel)
+// ═══════════════════════════════════════
+let DB = [
+  {p:'Rendah',i:'Tinggi',t:'Banyak',r:'Kontrak',pr:'Ada',k:'Layak'},
+  {p:'Rendah',i:'Sedang',t:'Banyak',r:'Kontrak',pr:'Tidak Ada',k:'Layak'},
+  {p:'Rendah',i:'Tinggi',t:'Banyak',r:'Milik Sendiri',pr:'Ada',k:'Layak'},
+  {p:'Sedang',i:'Tinggi',t:'Banyak',r:'Kontrak',pr:'Ada',k:'Layak'},
+  {p:'Rendah',i:'Sedang',t:'Banyak',r:'Kontrak',pr:'Ada',k:'Layak'},
+  {p:'Rendah',i:'Tinggi',t:'Sedikit',r:'Kontrak',pr:'Ada',k:'Layak'},
+  {p:'Sedang',i:'Sedang',t:'Banyak',r:'Kontrak',pr:'Ada',k:'Layak'},
+  {p:'Rendah',i:'Tinggi',t:'Banyak',r:'Kontrak',pr:'Tidak Ada',k:'Layak'},
+  {p:'Rendah',i:'Rendah',t:'Banyak',r:'Kontrak',pr:'Ada',k:'Layak'},
+  {p:'Sedang',i:'Tinggi',t:'Banyak',r:'Milik Sendiri',pr:'Ada',k:'Layak'},
+  {p:'Sedang',i:'Sedang',t:'Sedikit',r:'Kontrak',pr:'Ada',k:'Layak'},
+  {p:'Rendah',i:'Sedang',t:'Banyak',r:'Milik Sendiri',pr:'Ada',k:'Layak'},
+  {p:'Tinggi',i:'Rendah',t:'Sedikit',r:'Milik Sendiri',pr:'Tidak Ada',k:'Tidak Layak'},
+  {p:'Tinggi',i:'Sedang',t:'Sedikit',r:'Milik Sendiri',pr:'Tidak Ada',k:'Tidak Layak'},
+  {p:'Sedang',i:'Rendah',t:'Sedikit',r:'Milik Sendiri',pr:'Tidak Ada',k:'Tidak Layak'},
+  {p:'Tinggi',i:'Tinggi',t:'Sedikit',r:'Milik Sendiri',pr:'Ada',k:'Tidak Layak'},
+  {p:'Tinggi',i:'Sedang',t:'Banyak',r:'Milik Sendiri',pr:'Tidak Ada',k:'Tidak Layak'},
+  {p:'Sedang',i:'Rendah',t:'Sedikit',r:'Kontrak',pr:'Tidak Ada',k:'Tidak Layak'},
+  {p:'Tinggi',i:'Rendah',t:'Sedikit',r:'Kontrak',pr:'Tidak Ada',k:'Tidak Layak'},
+  {p:'Sedang',i:'Sedang',t:'Sedikit',r:'Milik Sendiri',pr:'Tidak Ada',k:'Tidak Layak'},
+];
+let HASIL = [];
+let charts = {};
+
+// ═══════════════════════════════════════
+// NAVIGASI
+// ═══════════════════════════════════════
+const PAGE_META = {
+  dashboard:  {t:'Dashboard', s:'Ringkasan sistem dan statistik data training'},
+  klasifikasi:{t:'Klasifikasi', s:'Input data calon penerima dan proses Naive Bayes'},
+  training:   {t:'Data Training', s:'Kelola dataset pelatihan model klasifikasi'},
+  riwayat:    {t:'Riwayat Uji', s:'Semua data yang telah diklasifikasi'},
+  evaluasi:   {t:'Evaluasi Model', s:'Statistik dan distribusi hasil klasifikasi'},
+  algoritma:  {t:'Algoritma', s:'Teori dan rumus Naive Bayes Classifier'},
+  panduan:    {t:'Panduan Pengembangan', s:'Roadmap pengembangan ke sistem blackbox'},
+};
+function gotoPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  const navs = document.querySelectorAll('.nav-btn');
+  const map = {dashboard:0,klasifikasi:1,training:2,riwayat:3,evaluasi:4,algoritma:5,panduan:6};
+  if (map[id] !== undefined) navs[map[id]].classList.add('active');
+  const m = PAGE_META[id];
+  document.getElementById('page-title').textContent = m.t;
+  document.getElementById('page-sub').textContent = m.s;
+  if (id === 'dashboard') refreshDashboard();
+  if (id === 'training') renderTraining();
+  if (id === 'riwayat') renderRiwayat();
+  if (id === 'evaluasi') renderEvaluasi();
+}
+
+// ═══════════════════════════════════════
+// NAIVE BAYES ENGINE
+// ═══════════════════════════════════════
+function naiveBayes(input) {
+  const classes = ['Layak', 'Tidak Layak'];
+  const fields  = ['p','i','t','r','pr'];
+  const labels  = ['Penghasilan','IPK','Tanggungan','Tinggal','Prestasi'];
+  const vals    = [input.p, input.i, input.t, input.r, input.pr];
+  const N = DB.length;
+  const res = {};
+
+  classes.forEach(cls => {
+    const sub = DB.filter(d => d.k === cls);
+    // Prior dengan Laplace
+    const prior = (sub.length + 1) / (N + classes.length);
+    let logLike = 0;
+    const details = [];
+
+    fields.forEach((f, idx) => {
+      const v    = vals[idx];
+      const uniq = [...new Set(DB.map(d => d[f]))].length;
+      const cnt  = sub.filter(d => d[f] === v).length;
+      const p    = (cnt + 1) / (sub.length + uniq);
+      logLike   += Math.log(p);
+      details.push({ label: labels[idx], val: v, cnt, subTotal: sub.length, p });
+    });
+
+    res[cls] = { prior, logScore: Math.log(prior) + logLike, details };
+  });
+
+  // Konversi dari log-space ke probabilitas
+  const maxLog = Math.max(...Object.values(res).map(r => r.logScore));
+  Object.keys(res).forEach(cls => {
+    res[cls].expScore = Math.exp(res[cls].logScore - maxLog);
+  });
+  const sumExp = Object.values(res).reduce((s, r) => s + r.expScore, 0);
+  Object.keys(res).forEach(cls => {
+    res[cls].posterior = res[cls].expScore / sumExp;
+  });
+  return res;
+}
+
+// ═══════════════════════════════════════
+// KLASIFIKASI
+// ═══════════════════════════════════════
+function doKlasifikasi() {
+  const nama = document.getElementById('f-nama').value.trim() || 'Tidak Diisi';
+  const nim  = document.getElementById('f-nim').value.trim()  || '-';
+  const input = {
+    p:  document.getElementById('f-penghasilan').value,
+    i:  document.getElementById('f-ipk').value,
+    t:  document.getElementById('f-tanggungan').value,
+    r:  document.getElementById('f-tinggal').value,
+    pr: document.getElementById('f-prestasi').value,
+  };
+
+  const res    = naiveBayes(input);
+  const pL     = res['Layak'].posterior;
+  const pT     = res['Tidak Layak'].posterior;
+  const isL    = pL >= pT;
+
+  // Update steps
+  document.getElementById('stp2').classList.add('done');
+  document.getElementById('stp3').classList.add('done');
+
+  const detailRows = res['Layak'].details.map((d, i) => {
+    const dT = res['Tidak Layak'].details[i];
+    return `<tr>
+      <td>${d.label}</td>
+      <td><span class="fp">${d.val}</span></td>
+      <td style="font-family:'JetBrains Mono',monospace;">${d.cnt}/${d.subTotal}</td>
+      <td style="font-family:'JetBrains Mono',monospace;color:var(--green);">${d.p.toFixed(4)}</td>
+      <td style="font-family:'JetBrains Mono',monospace;">${dT.cnt}/${dT.subTotal}</td>
+      <td style="font-family:'JetBrains Mono',monospace;color:var(--red);">${dT.p.toFixed(4)}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('result-area').innerHTML = `
+    <div class="result-hero ${isL ? 'layak' : 'tidak'}">
+      <i class="ti ${isL ? 'ti-circle-check' : 'ti-circle-x'} result-icon"></i>
+      <div>
+        <div class="result-verdict">${nama} — ${isL ? 'LAYAK' : 'TIDAK LAYAK'} Menerima Beasiswa</div>
+        <div class="result-desc">NIM: ${nim} &nbsp;·&nbsp; Naive Bayes + Laplace Smoothing (α=1) &nbsp;·&nbsp; ${DB.length} data training</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title"><i class="ti ti-chart-bar"></i> Probabilitas Hasil</div></div>
+      <div class="prob-row">
+        <div class="prob-header"><span>P(Layak | X)</span><span style="color:var(--green);">${(pL*100).toFixed(2)}%</span></div>
+        <div class="prob-track"><div class="prob-fill pf-green" style="width:${(pL*100).toFixed(2)}%;"></div></div>
+      </div>
+      <div class="prob-row" style="margin-top:10px;">
+        <div class="prob-header"><span>P(Tidak Layak | X)</span><span style="color:var(--red);">${(pT*100).toFixed(2)}%</span></div>
+        <div class="prob-track"><div class="prob-fill pf-red" style="width:${(pT*100).toFixed(2)}%;"></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i class="ti ti-table"></i> Tabel Perhitungan Lengkap</div>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Fitur</th><th>Nilai Input</th>
+              <th>count(x|Layak)</th><th>P(x|Layak)</th>
+              <th>count(x|Tidak)</th><th>P(x|Tidak)</th>
+            </tr>
+          </thead>
+          <tbody>${detailRows}</tbody>
+          <tfoot>
+            <tr>
+              <td colspan="2" style="font-weight:700;color:var(--text);">Prior P(C)</td>
+              <td colspan="2" style="font-family:'JetBrains Mono',monospace;color:var(--green);">${res['Layak'].prior.toFixed(6)}</td>
+              <td colspan="2" style="font-family:'JetBrains Mono',monospace;color:var(--red);">${res['Tidak Layak'].prior.toFixed(6)}</td>
+            </tr>
+            <tr>
+              <td colspan="2" style="font-weight:700;color:var(--text);">Posterior (dinormalisasi)</td>
+              <td colspan="2" style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--green);">${(pL*100).toFixed(4)}%</td>
+              <td colspan="2" style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--red);">${(pT*100).toFixed(4)}%</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:14px;">
+        <button class="btn btn-teal" onclick="simpan('${nama.replace(/'/g,"\\'")}','${nim}',${JSON.stringify(input)},${pL},${pT},'${isL?'Layak':'Tidak Layak'}')">
+          <i class="ti ti-device-floppy"></i> Simpan ke Riwayat
+        </button>
+        <button class="btn" onclick="resetKlasifikasi()"><i class="ti ti-refresh"></i> Uji Data Lain</button>
+      </div>
+    </div>`;
+}
+
+function simpan(nama, nim, input, pL, pT, hasil) {
+  HASIL.push({nama, nim, p:input.p, i:input.i, t:input.t, r:input.r, pr:input.pr, hasil, pL, pT});
+  const el = document.getElementById('nb-riwayat');
+  el.style.display = 'inline'; el.textContent = HASIL.length;
+  document.getElementById('m-diuji').textContent = HASIL.length;
+  showToast('Data berhasil disimpan ke riwayat!', 'success');
+}
+
+function resetKlasifikasi() {
+  document.getElementById('f-nama').value = '';
+  document.getElementById('f-nim').value = '';
+  document.getElementById('result-area').innerHTML = '';
+  ['stp2','stp3'].forEach(s => document.getElementById(s).classList.remove('done'));
+}
+
+// ═══════════════════════════════════════
+// DATA TRAINING
+// ═══════════════════════════════════════
+function renderTraining() {
+  const tbody = document.getElementById('training-tbody');
+  const layak = DB.filter(d => d.k === 'Layak').length;
+  const tidak = DB.length - layak;
+  tbody.innerHTML = DB.map((d, i) => `
+    <tr>
+      <td style="color:var(--text3);font-family:'JetBrains Mono',monospace;">${String(i+1).padStart(2,'0')}</td>
+      <td>${d.p}</td><td>${d.i}</td><td>${d.t}</td><td>${d.r}</td><td>${d.pr}</td>
+      <td><span class="badge ${d.k==='Layak'?'b-green':'b-red'}">${d.k}</span></td>
+      <td>
+        <button class="btn btn-sm btn-danger" onclick="hapusTraining(${i})">
+          <i class="ti ti-trash" style="font-size:13px;"></i>
+        </button>
+      </td>
+    </tr>`).join('');
+  document.getElementById('count-label').textContent = `${DB.length} data`;
+  document.getElementById('nb-training').textContent = DB.length;
+}
+
+function addTraining() {
+  DB.push({
+    p:  document.getElementById('t-p').value,
+    i:  document.getElementById('t-i').value,
+    t:  document.getElementById('t-t').value,
+    r:  document.getElementById('t-r').value,
+    pr: document.getElementById('t-pr').value,
+    k:  document.getElementById('t-k').value,
+  });
+  renderTraining();
+  showToast('Data training berhasil ditambahkan!', 'success');
+}
+
+function hapusTraining(idx) {
+  showModal('Hapus Data Training', `Hapus data ke-${idx+1}? Tindakan ini tidak dapat dibatalkan.`, () => {
+    DB.splice(idx, 1); renderTraining();
+    showToast('Data dihapus.', 'success');
+  });
+}
+
+function showImportSample() {
+  showToast('Data sampel sudah dimuat (20 data default).', 'success');
+}
+
+// ═══════════════════════════════════════
+// RIWAYAT
+// ═══════════════════════════════════════
+function renderRiwayat() {
+  const empty = document.getElementById('riwayat-empty');
+  const tbl   = document.getElementById('riwayat-table');
+  const btn   = document.getElementById('btn-clear');
+  if (!HASIL.length) {
+    empty.style.display = 'block'; tbl.style.display = 'none'; btn.style.display = 'none'; return;
+  }
+  empty.style.display = 'none'; tbl.style.display = 'block'; btn.style.display = 'inline-flex';
+  document.getElementById('riwayat-tbody').innerHTML = HASIL.map((d, i) => `
+    <tr>
+      <td style="font-family:'JetBrains Mono',monospace;color:var(--text3);">${i+1}</td>
+      <td style="color:var(--text);">${d.nama}</td>
+      <td style="font-family:'JetBrains Mono',monospace;">${d.nim}</td>
+      <td>${d.p}</td><td>${d.i}</td><td>${d.t}</td><td>${d.r}</td><td>${d.pr}</td>
+      <td><span class="badge ${d.hasil==='Layak'?'b-green':'b-red'}">${d.hasil}</span></td>
+      <td style="font-family:'JetBrains Mono',monospace;color:var(--green);">${(d.pL*100).toFixed(1)}%</td>
+      <td style="font-family:'JetBrains Mono',monospace;color:var(--red);">${(d.pT*100).toFixed(1)}%</td>
+    </tr>`).join('');
+}
+
+function confirmClear() {
+  showModal('Hapus Semua Riwayat', 'Semua data riwayat klasifikasi akan dihapus permanen.', () => {
+    HASIL = [];
+    document.getElementById('nb-riwayat').style.display = 'none';
+    document.getElementById('m-diuji').textContent = '0';
+    renderRiwayat();
+    showToast('Semua riwayat dihapus.', 'success');
+  });
+}
+
+// ═══════════════════════════════════════
+// EVALUASI
+// ═══════════════════════════════════════
+function renderEvaluasi() {
+  const empty   = document.getElementById('eval-empty');
+  const content = document.getElementById('eval-content');
+  if (!HASIL.length) { empty.style.display='block'; content.style.display='none'; return; }
+  empty.style.display='none'; content.style.display='block';
+
+  const layak = HASIL.filter(d => d.hasil === 'Layak');
+  const tidak = HASIL.filter(d => d.hasil === 'Tidak Layak');
+  const allPL = HASIL.map(d => d.pL);
+  const allPT = HASIL.map(d => d.pT);
+  const avgPL = allPL.reduce((a,b) => a+b, 0) / allPL.length;
+  const margins = HASIL.map(d => Math.abs(d.pL - d.pT));
+  const avgMargin = margins.reduce((a,b) => a+b, 0) / margins.length;
+
+  document.getElementById('ev-total').textContent  = HASIL.length;
+  document.getElementById('ev-layak').textContent  = layak.length;
+  document.getElementById('ev-tidak').textContent  = tidak.length;
+  document.getElementById('ev-avg').textContent    = (avgPL*100).toFixed(1)+'%';
+  document.getElementById('ev-layak-p').textContent = Math.round(layak.length/HASIL.length*100)+'% dari total';
+  document.getElementById('ev-tidak-p').textContent = Math.round(tidak.length/HASIL.length*100)+'% dari total';
+  document.getElementById('ev-max-l').textContent  = (Math.max(...allPL)*100).toFixed(2)+'%';
+  document.getElementById('ev-min-l').textContent  = (Math.min(...allPL)*100).toFixed(2)+'%';
+  document.getElementById('ev-max-t').textContent  = (Math.max(...allPT)*100).toFixed(2)+'%';
+  document.getElementById('ev-min-t').textContent  = (Math.min(...allPT)*100).toFixed(2)+'%';
+  document.getElementById('ev-margin').textContent = (avgMargin*100).toFixed(2)+'%';
+
+  if (charts.eval) { charts.eval.destroy(); charts.eval = null; }
+  charts.eval = new Chart(document.getElementById('chartEval').getContext('2d'), {
+    type: 'pie',
+    data: {
+      labels: ['Layak','Tidak Layak'],
+      datasets: [{data:[layak.length, tidak.length], backgroundColor:['#2ECC71','#E74C3C'], borderWidth:0}]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position:'bottom', labels:{color:'#8A9BB0',font:{size:12},padding:16} } }
+    }
+  });
+}
+
+// ═══════════════════════════════════════
+// DASHBOARD CHARTS
+// ═══════════════════════════════════════
+function refreshDashboard() {
+  const layak = DB.filter(d => d.k === 'Layak').length;
+  const tidak = DB.length - layak;
+  const N = DB.length;
+
+  document.getElementById('m-total').textContent    = N;
+  document.getElementById('m-layak').textContent    = layak;
+  document.getElementById('m-tidak').textContent    = tidak;
+  document.getElementById('m-diuji').textContent    = HASIL.length;
+  document.getElementById('m-layak-pct').textContent= Math.round(layak/N*100)+'% dari training';
+  document.getElementById('m-tidak-pct').textContent= Math.round(tidak/N*100)+'% dari training';
+  document.getElementById('prior-l').textContent    = ((layak+1)/(N+2)*100).toFixed(2)+'%';
+  document.getElementById('prior-t').textContent    = ((tidak+1)/(N+2)*100).toFixed(2)+'%';
+
+  // Donut
+  if (charts.donut) { charts.donut.destroy(); charts.donut = null; }
+  charts.donut = new Chart(document.getElementById('chartDonut').getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Layak','Tidak Layak'],
+      datasets: [{data:[layak,tidak], backgroundColor:['#2ECC71','#E74C3C'], borderWidth:0, hoverOffset:6}]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false, cutout:'65%',
+      plugins:{
+        legend:{position:'bottom',labels:{color:'#8A9BB0',font:{size:12},padding:14}},
+        tooltip:{callbacks:{label:ctx=>' '+ctx.label+': '+ctx.raw+' data'}}
+      }
+    }
+  });
+
+  // Bar chart penghasilan
+  const cats = ['Rendah','Sedang','Tinggi'];
+  const bLayak = cats.map(c => DB.filter(d => d.p===c && d.k==='Layak').length);
+  const bTidak = cats.map(c => DB.filter(d => d.p===c && d.k==='Tidak Layak').length);
+  if (charts.bar) { charts.bar.destroy(); charts.bar = null; }
+  charts.bar = new Chart(document.getElementById('chartBar').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: ['Penghasilan Rendah','Penghasilan Sedang','Penghasilan Tinggi'],
+      datasets: [
+        {label:'Layak', data:bLayak, backgroundColor:'rgba(46,204,113,0.75)', borderRadius:6},
+        {label:'Tidak Layak', data:bTidak, backgroundColor:'rgba(231,76,60,0.75)', borderRadius:6}
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      scales:{
+        x:{ticks:{color:'#8A9BB0'},grid:{color:'rgba(255,255,255,0.05)'}},
+        y:{ticks:{color:'#8A9BB0'},grid:{color:'rgba(255,255,255,0.05)'},beginAtZero:true}
+      },
+      plugins:{legend:{labels:{color:'#8A9BB0',font:{size:12},padding:14}}}
+    }
+  });
+}
+
+// ═══════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════
+function showToast(msg, type='success') {
+  const t = document.getElementById('toast');
+  const i = t.querySelector('i');
+  document.getElementById('toast-msg').textContent = msg;
+  t.className = 'toast t-' + type + ' show';
+  i.className = type === 'success' ? 'ti ti-check' : 'ti ti-x';
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+let modalCallback = null;
+function showModal(title, msg, cb) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-msg').textContent   = msg;
+  modalCallback = cb;
+  document.getElementById('modal').classList.add('show');
+}
+function closeModal() { document.getElementById('modal').classList.remove('show'); }
+document.getElementById('modal-confirm').onclick = () => { closeModal(); if (modalCallback) modalCallback(); };
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+window.addEventListener('load', () => {
+  refreshDashboard();
+  renderTraining();
+});
+</script>
+</body>
+</html>
+HTMLEOF
+echo "Done: $(wc -c < /mnt/user-data/outputs/sistem_beasiswa_naivebayes.html) bytes"
+Output
+
+Done: 58156 bytes
